@@ -20,10 +20,9 @@ def main():
     conn = create_connection(database)
 
     with conn:
-        filter = input("Word to search: ")
-        filter = filter.strip()+'%'
+        filter = input("Word to search: ").strip()+'%'
 
-        if(len(filter) > 0):
+        if(len(filter) > 1):
 
             # define regex expressions for kanji and kana unicode values
             kanji_filter = bool(re.search(r'[\u3400-\u4DB5\u4E00-\u9FCB\uF900-\uFA6A\u2E80-\u2FD5]', filter))
