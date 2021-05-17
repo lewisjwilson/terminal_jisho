@@ -2,8 +2,15 @@
 
 import os
 import re
+from itertools import islice
 from sql_manager import create_connection, search_sql, select_data
 
+# define an entry object
+class Entry:
+    def __init__(self, kanji, kana, definition):
+        self.kanji = kanji
+        self.kana = kana
+        self.definition = definition
 
 # clear terminal screen
 def clear():
@@ -13,6 +20,7 @@ def clear():
 def main():
 
     clear()
+    results_list = []
 
     database = r"JMdict_e.db"
 
@@ -20,10 +28,11 @@ def main():
     conn = create_connection(database)
 
     with conn:
-        filter = input("Word to search: ")
-        filter = filter.strip()+'%'
+        filter = input(" Word to search: ").strip()
 
         if(len(filter) > 0):
+
+            filter = filter+'%'
 
             # define regex expressions for kanji and kana unicode values
             kanji_filter = bool(re.search(r'[\u3400-\u4DB5\u4E00-\u9FCB\uF900-\uFA6A\u2E80-\u2FD5]', filter))
@@ -36,10 +45,26 @@ def main():
             else:
                 sql = search_sql('english')
 
-            select_data(conn, filter, sql)
+            results_list = select_data(conn, filter, sql)
+
+            firstrow = True
+            for row in islice(results_list, 10): # first 10 rows
+                if(firstrow):
+                    print("\n-------------------------------------------")
+                    firstrow = False
+                query_results = Entry
+                query_results.kanji, query_results.kana, query_results.definition = row
+                print(" Kanji: " + query_results.kanji + "\n")
+                print(" Kana:  " + query_results.kana + "\n")
+                print(" Definition: " + query_results.definition)
+                print("-------------------------------------------")
+
+            input("Press Enter to search again...")
+            main()
 
         else:
-            print("Exiting...")
+            input("Exiting... Press Enter to quit...")
+            clear()
 
 
 if __name__ == '__main__':

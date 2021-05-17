@@ -3,7 +3,6 @@
 import sqlite3
 from sqlite3 import Error
 
-
 def create_connection(db_file):
 
     conn = None
@@ -55,11 +54,12 @@ def search_sql(type):
 
 def select_data(conn, filter, sql):
 
+    search_results = []
     cur = conn.cursor()
-
     cur.execute(sql, (filter,))
-
     rows = cur.fetchall()
 
     for row in rows:
-        print(row)
+        search_results.append(row)
+
+    return search_results
