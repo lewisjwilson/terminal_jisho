@@ -28,9 +28,9 @@ def main():
     conn = create_connection(database)
 
     with conn:
-        filter = input(" Word to search: ").strip()
+        filter = input("Word to search: ").strip()+'%'
 
-        if(len(filter) > 0):
+        if(len(filter) > 1):
 
             filter = filter+'%'
 
