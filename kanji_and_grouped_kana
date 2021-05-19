@@ -1,3 +1,0 @@
-SELECT kanji.value, kana_value 
-FROM v_kana_grouped
-INNER JOIN kanji

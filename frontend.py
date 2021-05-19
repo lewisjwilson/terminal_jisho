@@ -3,7 +3,9 @@
 import os
 import re
 from itertools import islice
+from sort_algorithm import sort_algorithm
 from sql_manager import create_connection, create_views, search_sql, select_data
+
 
 # define an entry object
 class Entry:
@@ -14,12 +16,12 @@ class Entry:
         self.kanacommon = kanacommon
         self.kanjicommon = kanjicommon
 
-class _GetchUnix:
-    def __init__(self):
-        import tty, sys
 
+class _GetchUnix:
     def __call__(self):
-        import sys, tty, termios
+        import sys
+        import tty
+        import termios
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         try:
@@ -28,6 +30,7 @@ class _GetchUnix:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
+
 
 # clear terminal screen
 def clear():
@@ -54,7 +57,7 @@ def display_data(results_list, start, stop):
             notes += "common kana reading, "
         elif(entry.kanjicommon is None) and (entry.kanacommon is None):
             notes += " uncommon, "
-        print(notes[:-2]) # trim final 2 chars from notes
+        print(notes[:-2])  # trim final 2 chars from notes
         print(" -------------------------------------------")
 
     print(" Showing items " + str(stop) + " of " + str(len(results_list)) + " results.")
@@ -65,7 +68,7 @@ def display_data(results_list, start, stop):
     if(feedback == "q"):
         clear()
         quit()
-    elif( feedback == "\r"): # enter
+    elif(feedback == "\r"):  # enter
         clear()
     elif(feedback == "z") and (start-1 >= 0):
         clear()
@@ -109,22 +112,12 @@ def main():
                 sql = search_sql('english')
 
             results_list = select_data(conn, filter, sql)
-
-            # sort list by length of kanji, kana or english
-            if(kanji_filter):
-                results_list.sort(key=lambda x: len(x[0]))
-            elif(kana_filter):
-                results_list.sort(key=lambda x: len(x[1]))
-            else:
-                results_list.sort(key=lambda x: len(x[2]))
-
-            # sort based on commonness
-            results_list.sort(key=lambda x: (0 if x[4] is None else len(x[4])), reverse = True) # kanji
-            results_list.sort(key=lambda x: (0 if x[3] is None else len(x[3])), reverse = True) # kana
+            results_list = sort_algorithm(results_list, kanji_filter, kana_filter)
 
             start = 0
             stop = 1
-            if len(results_list)>0:
+            if len(results_list) > 0:
+                clear()
                 display_data(results_list, start, stop)
             else:
                 input(" No results found! Press Enter...")
