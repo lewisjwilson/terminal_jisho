@@ -31,9 +31,7 @@ def main():
         filter = input("Word to search: ").strip()+'%'
 
         if(len(filter) > 1):
-
-            filter = filter+'%'
-
+            
             # define regex expressions for kanji and kana unicode values
             kanji_filter = bool(re.search(r'[\u3400-\u4DB5\u4E00-\u9FCB\uF900-\uFA6A\u2E80-\u2FD5]', filter))
             kana_filter = bool(re.search(r'[\u3041-\u3096\u30A0-\u30FF\uFF5F-\uFF9F]', filter))
