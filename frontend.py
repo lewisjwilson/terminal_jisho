@@ -12,26 +12,79 @@ class Entry:
         self.kana = kana
         self.definition = definition
 
+class _GetchUnix:
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
 # clear terminal screen
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+# print to screen. start, stop are slices to view
+def display_data(results_list, start, stop):
+    print(" -------------------------------------------")
+    for row in islice(results_list, start, stop):
+        query_results = Entry
+        query_results.kanji, query_results.kana, query_results.definition = row
+        print(" Kanji: " + query_results.kanji + "\n")
+        print(" Kana:  " + query_results.kana + "\n")
+        print(" Definition: " + query_results.definition)
+        print(" -------------------------------------------")
+
+    print(" Showing items " + str(stop) + " of " + str(len(results_list)) + " results.")
+    print(" Prev = \'z\', Next = \'m\', Search again = \'Enter\', Quit = \'q\'")
+
+    getch = _GetchUnix()
+    feedback = getch()
+    if(feedback == "q"):
+        clear()
+        quit()
+    elif( feedback == "\r"): # enter
+        clear()
+    elif(feedback == "z") and (start-1 >= 0):
+        clear()
+        start -= 1
+        stop -= 1
+        display_data(results_list, start, stop)
+    elif(feedback == "m") and (stop < len(results_list)):
+        clear()
+        start += 1
+        stop += 1
+        display_data(results_list, start, stop)
+    else:
+        clear()
+        display_data(results_list, start, stop)
 
 
 def main():
 
     clear()
     results_list = []
-
     database = r"JMdict_e.db"
 
     # create a database connection
     conn = create_connection(database)
 
     with conn:
-        filter = input("Word to search: ").strip()+'%'
+        filter = input(" Word to search: ").strip()+'%'
 
         if(len(filter) > 1):
+<<<<<<< Updated upstream
             
+=======
+
+>>>>>>> Stashed changes
             # define regex expressions for kanji and kana unicode values
             kanji_filter = bool(re.search(r'[\u3400-\u4DB5\u4E00-\u9FCB\uF900-\uFA6A\u2E80-\u2FD5]', filter))
             kana_filter = bool(re.search(r'[\u3041-\u3096\u30A0-\u30FF\uFF5F-\uFF9F]', filter))
@@ -45,23 +98,16 @@ def main():
 
             results_list = select_data(conn, filter, sql)
 
-            firstrow = True
-            for row in islice(results_list, 10): # first 10 rows
-                if(firstrow):
-                    print("\n-------------------------------------------")
-                    firstrow = False
-                query_results = Entry
-                query_results.kanji, query_results.kana, query_results.definition = row
-                print(" Kanji: " + query_results.kanji + "\n")
-                print(" Kana:  " + query_results.kana + "\n")
-                print(" Definition: " + query_results.definition)
-                print("-------------------------------------------")
+            start = 0
+            stop = 1
+            if len(results_list)>0:
+                display_data(results_list, start, stop)
+            else:
+                input(" No results found! Press Enter...")
 
-            input("Press Enter to search again...")
             main()
 
         else:
-            input("Exiting... Press Enter to quit...")
             clear()
 
 
