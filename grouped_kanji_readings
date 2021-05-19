@@ -1,9 +1,0 @@
-CREATE VIEW IF NOT EXISTS v_kanji_grouped
-AS
-SELECT kana.entry_id, group_concat(kanji.value, ', ') AS kanji_value, kana.value AS kana_value
-FROM kana
-INNER JOIN entry
-ON entry.entry_id = kana.entry_id
-INNER JOIN kanji
-ON kanji.entry_id = kana.entry_id
-GROUP BY kanji.entry_id
