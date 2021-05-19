@@ -10,15 +10,38 @@ def create_connection(db_file):
         conn = sqlite3.connect(db_file)
     except Error as e:
         print(e)
-
     return conn
+
+
+def create_views(conn):
+
+    cur = conn.cursor()
+    cur.execute("""CREATE VIEW IF NOT EXISTS v_kana_grouped\
+                AS\
+                SELECT kana.entry_id, kanji.value AS kanji_value, group_concat(kana.value, ', ') AS kana_value\
+                FROM kana\
+                INNER JOIN entry\
+                ON entry.entry_id = kana.entry_id\
+                INNER JOIN kanji\
+                ON kanji.entry_id = kana.entry_id\
+                GROUP BY kanji.value""")
+
+    cur.execute("""CREATE VIEW IF NOT EXISTS v_kanji_grouped\
+                AS\
+                SELECT kana.entry_id, group_concat(kanji.value, ', ') AS kanji_value, kana.value AS kana_value\
+                FROM kana\
+                INNER JOIN entry\
+                ON entry.entry_id = kana.entry_id\
+                INNER JOIN kanji\
+                ON kanji.entry_id = kana.entry_id\
+                GROUP BY kanji.entry_id""")
 
 
 def search_sql(type):
     # type := kanji, kana or english search
     try:
         return{
-            'kanji': "SELECT kanji.value, kana.value, definition.value \
+            'kanji': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
                          FROM kanji \
                          INNER JOIN sense \
                          ON kanji.entry_id = sense.entry_id \
@@ -26,8 +49,12 @@ def search_sql(type):
                          ON sense.id = definition.sense_id \
                          INNER JOIN kana \
                          ON kanji.entry_id = kana.entry_id \
+                         LEFT JOIN kana_common\
+                         ON kana.id = kana_common.kana_id\
+                         LEFT JOIN kanji_common\
+                         ON kanji.id = kanji_common.kanji_id\
                          WHERE kanji.value LIKE ?",
-            'kana': "SELECT kanji.value, kana.value, definition.value \
+            'kana': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
                          FROM kana \
                          INNER JOIN sense \
                          ON kanji.entry_id = sense.entry_id \
@@ -35,8 +62,12 @@ def search_sql(type):
                          ON sense.id = definition.sense_id \
                          INNER JOIN kanji \
                          ON kanji.entry_id = kana.entry_id \
+                         LEFT JOIN kana_common\
+                         ON kana.id = kana_common.kana_id\
+                         LEFT JOIN kanji_common\
+                         ON kanji.id = kanji_common.kanji_id\
                          WHERE kana.value LIKE ?",
-            'english': "SELECT kanji.value, kana.value, definition.value \
+            'english': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
                          FROM kanji \
                          INNER JOIN sense \
                          ON kanji.entry_id = sense.entry_id \
@@ -44,6 +75,10 @@ def search_sql(type):
                          ON sense.id = definition.sense_id \
                          INNER JOIN kana \
                          ON kanji.entry_id = kana.entry_id \
+                         LEFT JOIN kana_common\
+                         ON kana.id = kana_common.kana_id\
+                         LEFT JOIN kanji_common\
+                         ON kanji.id = kanji_common.kanji_id\
                          WHERE definition.value LIKE ?"
         }.get(type)
     except Error as e:

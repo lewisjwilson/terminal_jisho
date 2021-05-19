@@ -3,14 +3,16 @@
 import os
 import re
 from itertools import islice
-from sql_manager import create_connection, search_sql, select_data
+from sql_manager import create_connection, create_views, search_sql, select_data
 
 # define an entry object
 class Entry:
-    def __init__(self, kanji, kana, definition):
+    def __init__(self, kanji, kana, definition, kanacommon, kanjicommon):
         self.kanji = kanji
         self.kana = kana
         self.definition = definition
+        self.kanacommon = kanacommon
+        self.kanjicommon = kanjicommon
 
 class _GetchUnix:
     def __init__(self):
@@ -31,15 +33,28 @@ class _GetchUnix:
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+
 # print to screen. start, stop are slices to view
 def display_data(results_list, start, stop):
     print(" -------------------------------------------")
     for row in islice(results_list, start, stop):
-        query_results = Entry
-        query_results.kanji, query_results.kana, query_results.definition = row
-        print(" Kanji: " + query_results.kanji + "\n")
-        print(" Kana:  " + query_results.kana + "\n")
-        print(" Definition: " + query_results.definition)
+        entry = Entry
+
+        entry.kanji, entry.kana, entry.definition,\
+        entry.kanacommon, entry.kanjicommon = row
+
+        print(" Kanji: " + entry.kanji + "\n")
+        print(" Kana:  " + entry.kana + "\n")
+        print(" Definition: " + entry.definition + "\n")
+        notes = " Notes: "
+
+        if(entry.kanjicommon is not None):
+            notes += "common kanji reading, "
+        if(entry.kanacommon is not None):
+            notes += "common kana reading, "
+        elif(entry.kanjicommon is None) and (entry.kanacommon is None):
+            notes += " uncommon, "
+        print(notes[:-2]) # trim final 2 chars from notes
         print(" -------------------------------------------")
 
     print(" Showing items " + str(stop) + " of " + str(len(results_list)) + " results.")
@@ -75,6 +90,7 @@ def main():
 
     # create a database connection
     conn = create_connection(database)
+    create_views(conn)
 
     with conn:
         filter = input(" Word to search: ").strip()+'%'
@@ -93,6 +109,18 @@ def main():
                 sql = search_sql('english')
 
             results_list = select_data(conn, filter, sql)
+
+            # sort list by length of kanji, kana or english
+            if(kanji_filter):
+                results_list.sort(key=lambda x: len(x[0]))
+            elif(kana_filter):
+                results_list.sort(key=lambda x: len(x[1]))
+            else:
+                results_list.sort(key=lambda x: len(x[2]))
+
+            # sort based on commonness
+            results_list.sort(key=lambda x: (0 if x[4] is None else len(x[4])), reverse = True) # kanji
+            results_list.sort(key=lambda x: (0 if x[3] is None else len(x[3])), reverse = True) # kana
 
             start = 0
             stop = 1
