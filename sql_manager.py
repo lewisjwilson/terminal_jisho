@@ -37,8 +37,8 @@ def create_views(conn):
                 GROUP BY kanji.entry_id""")
 
 
-def search_sql(type):
-    # type := kanji, kana or english search
+def search_sql(search_type):
+    # search_type := kanji, kana or english search
     try:
         return{
             'kanji': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
@@ -80,18 +80,18 @@ def search_sql(type):
                          LEFT JOIN kanji_common\
                          ON kanji.id = kanji_common.kanji_id\
                          WHERE definition.value LIKE ?"
-        }.get(type)
+        }.get(search_type)
     except Error as e:
-        print("sql_manager.py: type is '" + type
+        print("sql_manager.py: search_type is '" + search_type
                             + "', should be 'kanji', 'kana' or 'english.'")
         print(e)
 
 
-def select_data(conn, filter, sql):
+def select_data(conn, search_filter, sql):
 
     search_results = []
     cur = conn.cursor()
-    cur.execute(sql, (filter,))
+    cur.execute(sql, (search_filter,))
     rows = cur.fetchall()
 
     for row in rows:
