@@ -52,12 +52,20 @@ def display_data(results_list, start, stop):
         print(" Definition: " + entry.definition + "\n")
         notes = " Notes: "
 
-        if(entry.kanjicommon is not None):
-            notes += "common kanji reading, "
-        if(entry.kanacommon is not None):
-            notes += "common kana reading, "
-        elif(entry.kanjicommon is None) and (entry.kanacommon is None):
-            notes += " uncommon, "
+        if(entry.kanjicommon == 2):
+            notes += "v. common kanji, "
+        elif(entry.kanjicommon == 1):
+            notes += "common kanji, "
+        else:
+            notes += "uncommon kanji, "
+
+        if(entry.kanacommon == 2):
+            notes += "v. common kana, "
+        elif(entry.kanacommon == 1):
+            notes += "common kana, "
+        else:
+            notes += "uncommon kana, "
+
         print(notes[:-2])  # trim final 2 chars from notes
         print(" -------------------------------------------")
 
@@ -97,7 +105,7 @@ def main():
     create_views(conn)
 
     with conn:
-        search_filter = input(" Word to search: ").strip()+'%'
+        search_filter = "%" + input(" Word to search: ").strip()+"%"
 
         if(len(search_filter) > 1):
 
@@ -117,6 +125,7 @@ def main():
 
             start = 0
             stop = 1
+
             if len(results_list) > 0:
                 clear()
                 display_data(results_list, start, stop)
