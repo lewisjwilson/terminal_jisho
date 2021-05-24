@@ -67,7 +67,7 @@ def search_sql(search_type):
                          LEFT JOIN kanji_common\
                          ON kanji.id = kanji_common.kanji_id\
                          WHERE kana.value LIKE ?",
-            'english': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
+            'english': "SELECT group_concat(kanji.value, \", \"), group_concat(kana.value, \", \"), definition.value, kana_common.value, kanji_common.value \
                          FROM kanji \
                          INNER JOIN sense \
                          ON kanji.entry_id = sense.entry_id \
@@ -79,7 +79,8 @@ def search_sql(search_type):
                          ON kana.id = kana_common.kana_id\
                          LEFT JOIN kanji_common\
                          ON kanji.id = kanji_common.kanji_id\
-                         WHERE definition.value LIKE ?"
+                         WHERE definition.value LIKE ?\
+                         GROUP BY kanji.entry_id"
         }.get(search_type)
     except Error as e:
         print("sql_manager.py: search_type is '" + search_type

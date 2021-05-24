@@ -4,6 +4,7 @@ import subprocess
 import os
 import re
 from itertools import islice
+from termcolor import colored
 from sort_algorithm import sort_algorithm
 from sql_manager import create_connection, create_views, search_sql, select_data
 
@@ -98,6 +99,7 @@ def main():
 
     clear()
     results_list = []
+    results_tuples= []
     database = r"JMdict_e.db"
 
     # create a database connection
@@ -120,7 +122,11 @@ def main():
             else:
                 sql = search_sql('english')
 
-            results_list = select_data(conn, search_filter, sql)
+            results_tuples = select_data(conn, search_filter, sql)
+
+            # convert list of tuples to list of lists for mutability
+            results_list = [list(elem) for elem in results_tuples]
+
             results_list = sort_algorithm(results_list, kanji_filter, kana_filter)
 
             start = 0

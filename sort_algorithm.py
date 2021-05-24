@@ -4,7 +4,9 @@ import operator
 
 def sort_algorithm(results_list, kanji_filter, kana_filter):
 
-    """# sort list by length of kanji, kana or english
+    simplify(results_list)
+
+    # sort list by length of kanji, kana or english
     if(kanji_filter):
         results_list.sort(key=lambda x: len(x[0]))
     elif(kana_filter):
@@ -13,33 +15,33 @@ def sort_algorithm(results_list, kanji_filter, kana_filter):
         results_list.sort(key=lambda x: len(x[2]))
 
     # sort based on commonness
-    results_list.sort(key=lambda x: (0 if x[4] is None else len(x[4])), reverse = True) # kanji
-    results_list.sort(key=lambda x: (0 if x[3] is None else len(x[3])), reverse = True) # kana
-"""
-    v_common = ["news1", "ichi1", "spec1", "gai1"]
-    uncommon = None
+    # first sort by kana commonness, then by kanji commonness
+    results_list = sorted(results_list, key=lambda x: (x[4], x[3]), reverse=True)
+    return results_list
 
-    new_results_list = []
-    # converting commonness to number for sorting
-    for row in results_list:
-        r = list(row)
-        if(r[3] in v_common):
-            r[3] = 2
-        elif(r[3] == uncommon):
-            r[3] = 0
+def simplify(results_list):
+
+    # for the sake of sorting
+    # ichi1, spec1 etc. are mapped to 2
+    # ichi2, spec2 etc. are mapped to 1
+    # None is mapped to 0
+    for item in results_list:
+        if(item[3] is None):
+            item[3] = 0
+        elif(item[3].endswith("1")):
+            item[3] = 2
+        elif(item[3].endswith("2")):
+            item[3] = 1
         else:
-            r[3] = 1
+            item[3] = 0
 
-        if(r[4] in v_common):
-            r[4] = 2
-        elif(r[4] == uncommon):
-            r[4] = 0
+        if(item[4] is None):
+            item[4] = 0
+        elif(item[4].endswith("1")):
+            item[4] = 2
+        elif(item[4].endswith("2")):
+            item[4] = 1
         else:
-            r[4] = 1
-        row = tuple(r)
-        new_results_list.append(row)
+            item[4] = 0
 
-    new_results_list.sort(key = operator.itemgetter(4, 3), reverse = True)
-    new_results_list.sort(key=lambda x: len(x[2])) # sorts by descending length
-
-    return new_results_list
+    return results_list
