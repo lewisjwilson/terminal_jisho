@@ -46,28 +46,33 @@ def display_data(results_list, start, stop):
         entry = Entry
 
         entry.kanji, entry.kana, entry.definition,\
-        entry.kanacommon, entry.kanjicommon = row
+        entry.kanacommon, entry.kanjicommon, entry.part_of_speech = row
 
         print(" Kanji: " + entry.kanji + "\n")
         print(" Kana:  " + entry.kana + "\n")
         print(" Definition: " + entry.definition + "\n")
-        notes = " Notes: "
 
+        freq = " Frequency: "
         if(entry.kanjicommon == 2):
-            notes += "v. common kanji, "
+            freq += " v. common kanji, "
         elif(entry.kanjicommon == 1):
-            notes += "common kanji, "
+            freq += " common kanji, "
         else:
-            notes += "uncommon kanji, "
+            freq += " uncommon kanji, "
 
         if(entry.kanacommon == 2):
-            notes += "v. common kana, "
+            freq += "v. common kana, "
         elif(entry.kanacommon == 1):
-            notes += "common kana, "
+            freq += "freq common, "
         else:
-            notes += "uncommon kana, "
+            freq += "uncommon kana, "
+        print(freq[:-2] + "\n")  # trim final 2 chars from notes
 
-        print(notes[:-2])  # trim final 2 chars from notes
+        notes = " Notes: "
+        if(entry.part_of_speech is not None):
+            notes += entry.part_of_speech
+        print(notes)
+
         print(" -------------------------------------------")
 
     print(" Showing items " + str(stop) + " of " + str(len(results_list)) + " results.")
@@ -109,7 +114,7 @@ def main():
     with conn:
         search_filter = "%" + input(" Word to search: ").strip()+"%"
 
-        if(len(search_filter) > 1):
+        if(len(search_filter) > 2):
 
             # define regex expressions for kanji and kana unicode values
             kanji_filter = bool(re.search(r'[\u3400-\u4DB5\u4E00-\u9FCB\uF900-\uFA6A\u2E80-\u2FD5]', search_filter))
@@ -129,6 +134,7 @@ def main():
 
             results_list = sort_algorithm(results_list, kanji_filter, kana_filter)
 
+            # define interval for displaying entries (1 entry show)
             start = 0
             stop = 1
 

@@ -39,53 +39,30 @@ def create_views(conn):
 
 def search_sql(search_type):
     # search_type := kanji, kana or english search
-    try:
-        return{
-            'kanji': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
-                         FROM kanji \
-                         INNER JOIN sense \
-                         ON kanji.entry_id = sense.entry_id \
-                         INNER JOIN definition \
-                         ON sense.id = definition.sense_id \
-                         INNER JOIN kana \
-                         ON kanji.entry_id = kana.entry_id \
-                         LEFT JOIN kana_common\
-                         ON kana.id = kana_common.kana_id\
-                         LEFT JOIN kanji_common\
-                         ON kanji.id = kanji_common.kanji_id\
-                         WHERE kanji.value LIKE ?",
-            'kana': "SELECT kanji.value, kana.value, definition.value, kana_common.value, kanji_common.value \
-                         FROM kana \
-                         INNER JOIN sense \
-                         ON kanji.entry_id = sense.entry_id \
-                         INNER JOIN definition \
-                         ON sense.id = definition.sense_id \
-                         INNER JOIN kanji \
-                         ON kanji.entry_id = kana.entry_id \
-                         LEFT JOIN kana_common\
-                         ON kana.id = kana_common.kana_id\
-                         LEFT JOIN kanji_common\
-                         ON kanji.id = kanji_common.kanji_id\
-                         WHERE kana.value LIKE ?",
-            'english': "SELECT group_concat(kanji.value, \", \"), group_concat(kana.value, \", \"), definition.value, kana_common.value, kanji_common.value \
-                         FROM kanji \
-                         INNER JOIN sense \
-                         ON kanji.entry_id = sense.entry_id \
-                         INNER JOIN definition \
-                         ON sense.id = definition.sense_id \
-                         INNER JOIN kana \
-                         ON kanji.entry_id = kana.entry_id \
-                         LEFT JOIN kana_common\
-                         ON kana.id = kana_common.kana_id\
-                         LEFT JOIN kanji_common\
-                         ON kanji.id = kanji_common.kanji_id\
-                         WHERE definition.value LIKE ?\
-                         GROUP BY kanji.entry_id"
-        }.get(search_type)
-    except Error as e:
-        print("sql_manager.py: search_type is '" + search_type
-                            + "', should be 'kanji', 'kana' or 'english.'")
-        print(e)
+    if(search_type == "kanji"):
+        vals = ["kanji", "kana", "kanji.value"]
+    elif(search_type == "kana"):
+        vals = ["kana", "kanji", "kana.value"]
+    else:
+        vals = ["kanji", "kana", "definition.value"]
+
+    sql_string = "SELECT group_concat(kanji.value, \", \"), group_concat(kana.value, \", \"), definition.value, kana_common.value, kanji_common.value, part_of_speech.value \
+                     FROM " + vals[0] + " \
+                     INNER JOIN sense \
+                     ON kanji.entry_id = sense.entry_id \
+                     INNER JOIN definition \
+                     ON sense.id = definition.sense_id \
+                     INNER JOIN " + vals[1] + " \
+                     ON kanji.entry_id = kana.entry_id \
+                     INNER JOIN part_of_speech\
+					 ON part_of_speech.sense_id = sense.id\
+                     LEFT JOIN kana_common\
+                     ON kana.id = kana_common.kana_id\
+                     LEFT JOIN kanji_common\
+                     ON kanji.id = kanji_common.kanji_id\
+                     WHERE " + vals[2] + " LIKE ?\
+                     GROUP BY kanji.entry_id"
+    return(sql_string)
 
 
 def select_data(conn, search_filter, sql):
